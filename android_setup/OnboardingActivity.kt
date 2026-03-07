@@ -204,7 +204,9 @@ class OnboardingActivity : AppCompatActivity() {
     }
 
     private fun finishAndLaunchMain() {
-        startActivity(Intent(this, com.google.androidbrowserhelper.trusted.LauncherActivity::class.java))
+        val intent = Intent(this, com.google.androidbrowserhelper.trusted.LauncherActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        startActivity(intent)
         finish()
     }
 }

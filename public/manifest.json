@@ -1,6 +1,6 @@
 {
-  "name": "Expense Tracker",
-  "short_name": "Expenses",
+  "name": "INR Expense Tracker",
+  "short_name": "INR Expenses",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#09090b",
