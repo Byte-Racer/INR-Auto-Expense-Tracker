@@ -1,0 +1,5 @@
+{
+  "name": "INR Expense Tracker",
+  "description": "A personal expense tracker with threshold warnings and spending limits.",
+  "requestFramePermissions": []
+}
