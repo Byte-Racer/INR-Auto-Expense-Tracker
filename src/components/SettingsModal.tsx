@@ -19,19 +19,25 @@ export default function SettingsModal({
   transactions = [],
 }: SettingsModalProps) {
   const [warningType, setWarningType] = useState<"percentage" | "amount">(
-    settings.warningThresholdType
+    settings.warningThresholdType,
   );
   const [warningValue, setWarningValue] = useState(
-    settings.warningThresholdValue.toString()
+    settings.warningThresholdValue.toString(),
   );
   const [lockValue, setLockValue] = useState(
-    settings.lockThresholdValue.toString()
+    settings.lockThresholdValue.toString(),
   );
   const [username, setUsername] = useState(settings.username || "User");
-  const [incomeCategories, setIncomeCategories] = useState<string[]>(settings.incomeCategories || []);
-  const [expenseCategories, setExpenseCategories] = useState<string[]>(settings.expenseCategories || []);
+  const [incomeCategories, setIncomeCategories] = useState<string[]>(
+    settings.incomeCategories || [],
+  );
+  const [expenseCategories, setExpenseCategories] = useState<string[]>(
+    settings.expenseCategories || [],
+  );
   const [newCategory, setNewCategory] = useState("");
-  const [activeCategoryTab, setActiveCategoryTab] = useState<"income" | "expense">("expense");
+  const [activeCategoryTab, setActiveCategoryTab] = useState<
+    "income" | "expense"
+  >("expense");
 
   if (!isOpen) return null;
 
@@ -144,7 +150,7 @@ export default function SettingsModal({
                     "flex-1 py-2 text-sm font-medium rounded-md transition-colors",
                     warningType === "percentage"
                       ? "bg-zinc-800 text-white"
-                      : "text-zinc-500 hover:text-zinc-300"
+                      : "text-zinc-500 hover:text-zinc-300",
                   )}
                 >
                   Percentage (%)
@@ -156,7 +162,7 @@ export default function SettingsModal({
                     "flex-1 py-2 text-sm font-medium rounded-md transition-colors",
                     warningType === "amount"
                       ? "bg-zinc-800 text-white"
-                      : "text-zinc-500 hover:text-zinc-300"
+                      : "text-zinc-500 hover:text-zinc-300",
                   )}
                 >
                   Amount (₹)
@@ -196,7 +202,7 @@ export default function SettingsModal({
             <h3 className="text-lg font-semibold text-zinc-200 border-b border-zinc-800 pb-2">
               Categories
             </h3>
-            
+
             {/* Category Type Tabs */}
             <div className="flex bg-zinc-950 p-1 rounded-lg border border-zinc-800">
               <button
@@ -206,7 +212,7 @@ export default function SettingsModal({
                   "flex-1 py-2 text-sm font-medium rounded-md transition-colors",
                   activeCategoryTab === "expense"
                     ? "bg-rose-500/20 text-rose-500 shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-300"
+                    : "text-zinc-500 hover:text-zinc-300",
                 )}
               >
                 Expense
@@ -218,7 +224,7 @@ export default function SettingsModal({
                   "flex-1 py-2 text-sm font-medium rounded-md transition-colors",
                   activeCategoryTab === "income"
                     ? "bg-emerald-500/20 text-emerald-500 shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-300"
+                    : "text-zinc-500 hover:text-zinc-300",
                 )}
               >
                 Income
@@ -243,7 +249,10 @@ export default function SettingsModal({
                 </button>
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
-                {(activeCategoryTab === "income" ? incomeCategories : expenseCategories).map((cat) => (
+                {(activeCategoryTab === "income"
+                  ? incomeCategories
+                  : expenseCategories
+                ).map((cat) => (
                   <div
                     key={cat}
                     className="flex items-center gap-1 bg-zinc-800 text-zinc-200 px-3 py-1 rounded-full text-sm border border-zinc-700"
@@ -251,7 +260,9 @@ export default function SettingsModal({
                     <span>{cat}</span>
                     <button
                       type="button"
-                      onClick={() => handleDeleteCategory(cat, activeCategoryTab)}
+                      onClick={() =>
+                        handleDeleteCategory(cat, activeCategoryTab)
+                      }
                       className="text-zinc-500 hover:text-rose-500 transition-colors"
                     >
                       <Trash2 className="w-3 h-3" />
@@ -275,6 +286,16 @@ export default function SettingsModal({
               <Download className="w-4 h-4" />
               Download Backup (JSON)
             </button>
+          </div>
+
+          {/* Credits */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-zinc-200 border-b border-zinc-800 pb-2">
+              Credits
+            </h3>
+            <p className="text-sm text-zinc-400 italic text-center">
+              "Forged into existence by Arceus (GP)"
+            </p>
           </div>
 
           <button
