@@ -66,9 +66,6 @@ Notification parsing regex is implemented for the following Indian banks:
 > ⚠️ Bank notification formats can change without notice. If parsing breaks, open an issue with the raw notification text (redact your account number).
 
 ---
-
-## Installation
-
 ### Prerequisites
 - OnePlus Nord CE5 (or any Android 10+ device)
 - Chrome installed and up to date
