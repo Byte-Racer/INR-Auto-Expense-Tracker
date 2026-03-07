@@ -204,8 +204,7 @@ class OnboardingActivity : AppCompatActivity() {
     }
 
     private fun finishAndLaunchMain() {
-        // If integrating directly into PWA, uncomment the intent to launch your main activity
-        // startActivity(Intent(this, TwaMainActivity::class.java))
+        startActivity(Intent(this, com.google.androidbrowserhelper.trusted.LauncherActivity::class.java))
         finish()
     }
 }

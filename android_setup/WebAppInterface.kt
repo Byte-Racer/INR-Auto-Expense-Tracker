@@ -19,8 +19,12 @@ class WebAppInterface(private val context: Context, private val webView: WebView
     fun onTransactionReceived(type: String, amount: String, last4: String) {
         val uiHandler = Handler(Looper.getMainLooper())
         uiHandler.post {
+            val safeType = type.replace("'", "\\'")
+            val safeAmount = amount.replace("'", "\\'")
+            val safeLast4 = last4.replace("'", "\\'")
+
             // Invokes the JS function defined in the PWA window object
-            val jsCall = "if (window.onNativeTransaction) { window.onNativeTransaction('$type', '$amount', '$last4'); } else { console.warn('Native transaction fired but window.onNativeTransaction is not defined'); }"
+            val jsCall = "if (window.onNativeTransaction) { window.onNativeTransaction('$safeType', '$safeAmount', '$safeLast4'); } else { console.warn('Native transaction fired but window.onNativeTransaction is not defined'); }"
             webView.evaluateJavascript(jsCall, null)
         }
     }

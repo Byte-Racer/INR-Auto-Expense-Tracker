@@ -4,6 +4,7 @@ import android.content.Intent
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 class ExpenseNotificationService : NotificationListenerService() {
 
@@ -106,7 +107,7 @@ class ExpenseNotificationService : NotificationListenerService() {
             broadcastIntent.putExtra("type", type)
             broadcastIntent.putExtra("amount", amount)
             broadcastIntent.putExtra("last4", last4)
-            sendBroadcast(broadcastIntent)
+            LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastIntent)
         }
     }
 }

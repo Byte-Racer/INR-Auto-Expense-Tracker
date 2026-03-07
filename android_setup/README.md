@@ -14,6 +14,12 @@ This folder contains the native Android code to integrate the Notification Liste
 
 Since your app is packaged with PWABuilder (TWA), you likely have an Android project folder (e.g., `android/app/src/main/java/...`). Drop the Kotlin files into that directory and merge the XML snippet into your `AndroidManifest.xml`.
 
+Make sure to add the LocalBroadcastManager dependency in your `app/build.gradle` dependencies block:
+
+```gradle
+implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
+```
+
 In the Activity where you initialize your WebView or TWA, you'll need to hook up the `WebAppInterface`:
 
 ```kotlin
@@ -22,6 +28,7 @@ val webAppInterface = WebAppInterface(this, webView)
 webView.addJavascriptInterface(webAppInterface, "Android")
 
 // 2. Register a local broadcast receiver to listen for transactions parsed by ExpenseNotificationService
+// (Be sure to import androidx.localbroadcastmanager.content.LocalBroadcastManager)
 val receiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         if (intent?.action == ExpenseNotificationService.ACTION_TRANSACTION_RECEIVED) {
@@ -37,11 +44,10 @@ val receiver = object : BroadcastReceiver() {
 
 // 3. Register the receiver
 val filter = IntentFilter(ExpenseNotificationService.ACTION_TRANSACTION_RECEIVED)
-if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-    registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
-} else {
-    registerReceiver(receiver, filter)
-}
+LocalBroadcastManager.getInstance(this).registerReceiver(receiver, filter)
+
+// And in your onDestroy():
+// LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver)
 ```
 
 Then simply include `pwa_integration.js` in your frontend and implement your logic!
