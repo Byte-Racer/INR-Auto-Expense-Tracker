@@ -1,10 +1,10 @@
 const CACHE_NAME = "expense-tracker-v1";
 const ASSETS_TO_CACHE = [
-  "/inr-expense-tracker/",
-  "/inr-expense-tracker/index.html",
-  "/inr-expense-tracker/manifest.json",
-  "/inr-expense-tracker/icons/icon-192.png",
-  "/repo-name/icons/icon-512.png",
+  "/INR-Auto-Expense-Tracker/",
+  "/INR-Auto-Expense-Tracker/index.html",
+  "/INR-Auto-Expense-Tracker/manifest.json",
+  "/INR-Auto-Expense-Tracker/icons/icon-192.png",
+  "/INR-Auto-Expense-Tracker/icons/icon-512.png",
 ];
 
 // Install: cache all core assets
