@@ -10,6 +10,10 @@ import Navigation from "./components/Navigation";
 import AddTransactionModal from "./components/AddTransactionModal";
 import SettingsModal from "./components/SettingsModal";
 import { Plus, Settings } from "lucide-react";
+import {
+  requestNotificationPermission,
+  sendNotification,
+} from "./lib/notifications";
 
 const DEFAULT_SETTINGS: AppSettings = {
   initialCashBalance: 0,
@@ -87,6 +91,11 @@ export default function App() {
       setSettings(newSettings);
     }
   }, [storedSettings, setSettings]);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
 
   // Calculate current balances
   const currentCashBalance = useMemo(() => {

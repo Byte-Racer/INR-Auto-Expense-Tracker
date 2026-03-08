@@ -1,5 +1,13 @@
 import React, { useState, useMemo } from "react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { format, subDays, subMonths, endOfMonth, isSameMonth } from "date-fns";
 import { Transaction } from "../types";
 import { formatCurrency, cn } from "../lib/utils";
@@ -11,7 +19,10 @@ interface BalanceHistoryChartProps {
   initialBalance: number;
 }
 
-export default function BalanceHistoryChart({ transactions, initialBalance }: BalanceHistoryChartProps) {
+export default function BalanceHistoryChart({
+  transactions,
+  initialBalance,
+}: BalanceHistoryChartProps) {
   const [range, setRange] = useState<TimeRange>("1M");
 
   const data = useMemo(() => {
@@ -24,7 +35,7 @@ export default function BalanceHistoryChart({ transactions, initialBalance }: Ba
         points.push({
           date,
           label: format(date, "EEE"),
-          balance: 0
+          balance: 0,
         });
       }
     } else if (range === "1M") {
@@ -33,7 +44,7 @@ export default function BalanceHistoryChart({ transactions, initialBalance }: Ba
         points.push({
           date,
           label: format(date, "MMM d"),
-          balance: 0
+          balance: 0,
         });
       }
     } else if (range === "1Y") {
@@ -43,17 +54,18 @@ export default function BalanceHistoryChart({ transactions, initialBalance }: Ba
         points.push({
           date: pointDate,
           label: format(pointDate, "MMM"),
-          balance: 0
+          balance: 0,
         });
       }
     }
 
     // 1. Calculate daily net changes
     const dailyChange: Record<string, number> = {};
-    transactions.forEach(tx => {
-        const dateKey = tx.date.includes('T') ? tx.date.split('T')[0] : tx.date;
-        const amount = tx.type === 'income' ? tx.amount : -tx.amount;
-        dailyChange[dateKey] = (dailyChange[dateKey] || 0) + amount;
+    transactions.forEach((tx) => {
+      const dateKey = tx.date.includes("T") ? tx.date.split("T")[0] : tx.date;
+      const rawAmount = Number(tx.amount) || 0;
+      const amount = tx.type === "income" ? rawAmount : -rawAmount;
+      dailyChange[dateKey] = (dailyChange[dateKey] || 0) + amount;
     });
 
     // 2. Sort dates with changes
@@ -61,31 +73,36 @@ export default function BalanceHistoryChart({ transactions, initialBalance }: Ba
 
     // 3. Calculate initial balance before the first point
     const firstPointDate = format(points[0].date, "yyyy-MM-dd");
-    let running = initialBalance;
+    let running = Number(initialBalance) || 0;
     let changeIdx = 0;
-    
+
     // Advance to first point (sum all changes BEFORE the first point)
-    while(changeIdx < changeDates.length && changeDates[changeIdx] < firstPointDate) {
-        running += dailyChange[changeDates[changeIdx]];
-        changeIdx++;
+    while (
+      changeIdx < changeDates.length &&
+      changeDates[changeIdx] < firstPointDate
+    ) {
+      running += dailyChange[changeDates[changeIdx]];
+      changeIdx++;
     }
 
     // 4. Iterate points and update balance
-    return points.map(point => {
-        const pointIso = format(point.date, "yyyy-MM-dd");
-        
-        // Add all changes up to and including this point's date
-        while(changeIdx < changeDates.length && changeDates[changeIdx] <= pointIso) {
-            running += dailyChange[changeDates[changeIdx]];
-            changeIdx++;
-        }
-        
-        return {
-            ...point,
-            balance: running
-        };
-    });
+    return points.map((point) => {
+      const pointIso = format(point.date, "yyyy-MM-dd");
 
+      // Add all changes up to and including this point's date
+      while (
+        changeIdx < changeDates.length &&
+        changeDates[changeIdx] <= pointIso
+      ) {
+        running += dailyChange[changeDates[changeIdx]];
+        changeIdx++;
+      }
+
+      return {
+        ...point,
+        balance: running,
+      };
+    });
   }, [range, transactions, initialBalance]);
 
   return (
@@ -101,7 +118,7 @@ export default function BalanceHistoryChart({ transactions, initialBalance }: Ba
                 "px-3 py-1 text-xs font-medium rounded-md transition-colors",
                 range === r
                   ? "bg-zinc-800 text-white"
-                  : "text-zinc-500 hover:text-zinc-300"
+                  : "text-zinc-500 hover:text-zinc-300",
               )}
             >
               {r}
@@ -115,39 +132,47 @@ export default function BalanceHistoryChart({ transactions, initialBalance }: Ba
           <AreaChart data={data}>
             <defs>
               <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-            <XAxis 
-              dataKey="label" 
-              stroke="#52525b" 
-              fontSize={12} 
-              tickLine={false} 
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="#27272a"
+              vertical={false}
+            />
+            <XAxis
+              dataKey="label"
+              stroke="#52525b"
+              fontSize={12}
+              tickLine={false}
               axisLine={false}
               minTickGap={30}
             />
-            <YAxis 
-              stroke="#52525b" 
-              fontSize={12} 
-              tickLine={false} 
+            <YAxis
+              stroke="#52525b"
+              fontSize={12}
+              tickLine={false}
               axisLine={false}
               tickFormatter={(value) => `₹${value}`}
               width={60}
             />
             <Tooltip
-              contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", color: "#fff" }}
+              contentStyle={{
+                backgroundColor: "#18181b",
+                borderColor: "#27272a",
+                color: "#fff",
+              }}
               formatter={(value: number) => [formatCurrency(value), "Balance"]}
               labelStyle={{ color: "#a1a1aa" }}
             />
-            <Area 
-              type="monotone" 
-              dataKey="balance" 
-              stroke="#10b981" 
+            <Area
+              type="monotone"
+              dataKey="balance"
+              stroke="#10b981"
               strokeWidth={2}
-              fillOpacity={1} 
-              fill="url(#colorBalance)" 
+              fillOpacity={1}
+              fill="url(#colorBalance)"
             />
           </AreaChart>
         </ResponsiveContainer>
