@@ -41,8 +41,9 @@ export default function WalletsView({
   };
 
   const handleSaveEdit = () => {
-    const newValue = parseFloat(editValue);
+    let newValue = parseFloat(editValue);
     if (!isNaN(newValue)) {
+      newValue = Math.max(0, newValue);
       const dbDiff =
         newValue -
         (editingWallet === "cash" ? currentCashBalance : currentBankBalance);

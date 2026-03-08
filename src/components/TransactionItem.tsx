@@ -21,9 +21,11 @@ const TransactionItem: React.FC<TransactionItemProps> = React.memo(({ tx }) => {
         <div
           className={cn(
             "p-2 rounded-full",
-            tx.type === "income"
-              ? "bg-emerald-500/10 text-emerald-500"
-              : "bg-rose-500/10 text-rose-500",
+            tx.isBlocked
+              ? "bg-rose-500/20 text-rose-500"
+              : tx.type === "income"
+                ? "bg-emerald-500/10 text-emerald-500"
+                : "bg-rose-500/10 text-rose-500",
           )}
         >
           {tx.type === "income" ? (
@@ -34,7 +36,19 @@ const TransactionItem: React.FC<TransactionItemProps> = React.memo(({ tx }) => {
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <p className="font-medium text-zinc-200">{tx.category}</p>
+            <p
+              className={cn(
+                "font-medium",
+                tx.isBlocked ? "text-rose-500 line-through" : "text-zinc-200",
+              )}
+            >
+              {tx.category}
+            </p>
+            {tx.isBlocked && (
+              <span className="flex items-center gap-1 text-[10px] bg-rose-500/20 text-rose-500 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
+                Blocked
+              </span>
+            )}
             {tx.wallet === "cash" ? (
               <span className="flex items-center gap-1 text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded uppercase tracking-wider">
                 <Wallet className="w-3 h-3" /> Cash
@@ -61,7 +75,11 @@ const TransactionItem: React.FC<TransactionItemProps> = React.memo(({ tx }) => {
         <p
           className={cn(
             "font-semibold",
-            tx.type === "income" ? "text-emerald-500" : "text-rose-500",
+            tx.isBlocked
+              ? "text-rose-500/50 line-through"
+              : tx.type === "income"
+                ? "text-emerald-500"
+                : "text-rose-500",
           )}
         >
           {tx.type === "income" ? "+" : "-"}

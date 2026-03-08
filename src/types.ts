@@ -15,6 +15,7 @@ export interface Transaction {
   justification?: string; // For lock threshold override
   isWarning?: boolean; // Persisted warning state
   isLocked?: boolean; // Persisted lock state
+  isBlocked?: boolean; // Transaction was blocked due to insufficient balance
 }
 
 export interface AppSettings {

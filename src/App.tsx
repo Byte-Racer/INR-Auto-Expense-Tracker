@@ -14,6 +14,7 @@ import {
   requestNotificationPermission,
   sendNotification,
 } from "./lib/notifications";
+import { formatCurrency } from "./lib/utils";
 
 const DEFAULT_SETTINGS: AppSettings = {
   initialCashBalance: 0,
@@ -50,6 +51,16 @@ export default function App() {
   const [currentView, setCurrentView] = useState<View>("home");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const [notificationPermission, setNotificationPermission] =
+    useState<NotificationPermission>("default");
+  const [warningNotificationSent, setWarningNotificationSent] = useState(false);
+  const [lockNotificationSent, setLockNotificationSent] = useState(false);
+  const [blockedTxError, setBlockedTxError] = useState<{
+    show: boolean;
+    msg: string;
+    amount: number;
+  } | null>(null);
 
   // Merge with defaults to ensure new fields exist
   const settings: AppSettings = useMemo(
@@ -92,27 +103,34 @@ export default function App() {
     }
   }, [storedSettings, setSettings]);
 
-  // Request notification permission on mount
+  // Request notification permission on mount and check status
   useEffect(() => {
-    requestNotificationPermission();
+    if ("Notification" in window) {
+      setNotificationPermission(Notification.permission);
+    }
   }, []);
 
   // Calculate current balances
   const currentCashBalance = useMemo(() => {
-    const cashTransactions = transactions.filter((t) => t.wallet === "cash");
+    const cashTransactions = transactions.filter(
+      (t) => t.wallet === "cash" && !t.isBlocked,
+    );
     const totalIncome = cashTransactions
       .filter((t) => t.type === "income")
       .reduce((acc, curr) => acc + curr.amount, 0);
     const totalExpense = cashTransactions
       .filter((t) => t.type === "expense")
       .reduce((acc, curr) => acc + curr.amount, 0);
-    return settings.initialCashBalance + totalIncome - totalExpense;
+    return Math.max(
+      0,
+      settings.initialCashBalance + totalIncome - totalExpense,
+    );
   }, [transactions, settings.initialCashBalance]);
 
   const currentBankBalance = useMemo(() => {
     // Treat undefined wallet as bank for backward compatibility
     const bankTransactions = transactions.filter(
-      (t) => t.wallet === "bank" || !t.wallet,
+      (t) => (t.wallet === "bank" || !t.wallet) && !t.isBlocked,
     );
     const totalIncome = bankTransactions
       .filter((t) => t.type === "income")
@@ -120,7 +138,10 @@ export default function App() {
     const totalExpense = bankTransactions
       .filter((t) => t.type === "expense")
       .reduce((acc, curr) => acc + curr.amount, 0);
-    return settings.initialBankBalance + totalIncome - totalExpense;
+    return Math.max(
+      0,
+      settings.initialBankBalance + totalIncome - totalExpense,
+    );
   }, [transactions, settings.initialBankBalance]);
 
   const currentBalance = currentCashBalance + currentBankBalance;
@@ -193,8 +214,7 @@ export default function App() {
     setSettings(newSettings);
   };
 
-  const handleAddTransaction = (tx: Transaction) => {
-    // Calculate flags for the new transaction
+  const handleAddTransaction = (tx: Transaction, isAutoDetected = false) => {
     const initialTotal =
       settings.initialCashBalance + settings.initialBankBalance;
     const warningThreshold =
@@ -202,16 +222,69 @@ export default function App() {
         ? initialTotal * (settings.warningThresholdValue / 100)
         : settings.warningThresholdValue;
 
-    const isLockedState = currentBalance <= settings.lockThresholdValue;
-    const isWarningState = currentBalance <= warningThreshold;
+    if (tx.type === "expense" && tx.amount > currentBalance) {
+      if (!isAutoDetected) {
+        setBlockedTxError({
+          show: true,
+          msg: `Insufficient balance. Your current balance is ₹${currentBalance} but the expense is ₹${tx.amount}. Transaction has not been recorded.`,
+          amount: tx.amount,
+        });
+        sendNotification("❌ Transaction Blocked", {
+          body: `₹${tx.amount} expense blocked — insufficient balance (₹${currentBalance} remaining).`,
+        });
+        return; // Block transaction
+      } else {
+        tx.isBlocked = true;
+        tx.note = "FLAGGED — insufficient balance";
+        sendNotification("❌ Transaction Blocked", {
+          body: `₹${tx.amount} auto-expense blocked — insufficient balance (₹${currentBalance} remaining).`,
+        });
+      }
+    }
+
+    let nextBalance = currentBalance;
+    if (!tx.isBlocked) {
+      nextBalance =
+        currentBalance + (tx.type === "income" ? tx.amount : -tx.amount);
+      nextBalance = Math.max(0, nextBalance); // Hard floor
+    }
+
+    const isLockedState = nextBalance <= settings.lockThresholdValue;
+    const isWarningState = nextBalance <= warningThreshold;
 
     const newTx = {
       ...tx,
-      wallet: tx.wallet || "cash", // Default new additions to cash if not provided
-      isLocked: tx.type === "expense" ? isLockedState : false,
+      wallet: tx.wallet || "cash",
+      isLocked: tx.type === "expense" && !tx.isBlocked ? isLockedState : false,
       isWarning:
-        tx.type === "expense" ? isWarningState && !isLockedState : false,
+        tx.type === "expense" && !tx.isBlocked
+          ? isWarningState && !isLockedState
+          : false,
     };
+
+    if (tx.type === "income") {
+      if (nextBalance > warningThreshold) setWarningNotificationSent(false);
+      if (nextBalance > settings.lockThresholdValue)
+        setLockNotificationSent(false);
+    } else if (tx.type === "expense" && !tx.isBlocked) {
+      if (isLockedState && !lockNotificationSent) {
+        sendNotification("🔴 Spending Lock Active", {
+          body: `Your balance is ₹${nextBalance}. You must justify all further expenses.`,
+        });
+        setLockNotificationSent(true);
+      } else if (isWarningState && !isLockedState && !warningNotificationSent) {
+        let warningPct = settings.warningThresholdValue;
+        if (settings.warningThresholdType === "amount") {
+          warningPct = parseFloat(
+            ((warningThreshold / Math.max(1, initialTotal)) * 100).toFixed(1),
+          );
+        }
+        sendNotification("⚠️ Low Balance Warning", {
+          body: `Your balance is ₹${nextBalance}. You have ${warningPct}% or less remaining.`,
+        });
+        setWarningNotificationSent(true);
+      }
+    }
 
     setTransactions((prev) => [newTx, ...prev]);
   };
@@ -238,7 +311,7 @@ export default function App() {
         wallet: "bank", // Always bank
       };
 
-      handleAddTransaction(tx);
+      handleAddTransaction(tx, true);
     };
   }, [handleAddTransaction]);
 
@@ -252,6 +325,14 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-24 font-sans">
+      {/* Fallback Notification Banner */}
+      {notificationPermission !== "granted" && (
+        <div className="bg-rose-600/90 text-white px-4 py-3 text-center text-sm font-medium sticky top-0 z-50 shadow-md">
+          ⚠️ Enable notifications in your browser settings to receive balance
+          alerts
+        </div>
+      )}
+
       {/* Header */}
       <header className="sticky top-0 z-20 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 px-6 py-4 flex justify-between items-center">
         <div>
@@ -305,6 +386,25 @@ export default function App() {
       </button>
 
       {/* Modals */}
+      {blockedTxError?.show && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-zinc-900 rounded-2xl w-full max-w-sm p-6 border border-rose-500/50 shadow-2xl relative animate-in zoom-in duration-200">
+            <h2 className="text-xl font-bold text-rose-500 mb-2 flex items-center gap-2">
+              <span className="text-2xl">❌</span> Transaction Blocked
+            </h2>
+            <p className="text-zinc-300 text-sm mb-6 leading-relaxed">
+              {blockedTxError.msg}
+            </p>
+            <button
+              onClick={() => setBlockedTxError(null)}
+              className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-3 px-4 rounded-lg transition-colors border border-zinc-700"
+            >
+              Acknowledge
+            </button>
+          </div>
+        </div>
+      )}
+
       {isAddModalOpen && (
         <AddTransactionModal
           isOpen={isAddModalOpen}

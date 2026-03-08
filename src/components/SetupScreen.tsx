@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { AppSettings } from "../types";
 import { cn } from "../lib/utils";
+import { requestNotificationPermission } from "../lib/notifications";
 
 interface SetupScreenProps {
   onComplete: (settings: AppSettings) => void;
@@ -18,6 +19,8 @@ export default function SetupScreen({ onComplete }: SetupScreenProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!initialBankBalance || !warningValue || !lockValue) return;
+
+    requestNotificationPermission();
 
     onComplete({
       initialCashBalance: parseFloat(initialCashBalance) || 0,
