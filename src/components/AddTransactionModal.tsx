@@ -21,13 +21,17 @@ export default function AddTransactionModal({
   expenseCategories,
 }: AddTransactionModalProps) {
   const [type, setType] = useState<TransactionType>("expense");
+  const [wallet, setWallet] = useState<"cash" | "bank">("cash"); // New wallet state
   const [amount, setAmount] = useState("");
-  
-  const currentCategories = type === "income" ? incomeCategories : expenseCategories;
+
+  const currentCategories =
+    type === "income" ? incomeCategories : expenseCategories;
   const safeCategories = currentCategories || [];
-  
-  const [category, setCategory] = useState<Category>(safeCategories[0] || "Other");
-  
+
+  const [category, setCategory] = useState<Category>(
+    safeCategories[0] || "Other",
+  );
+
   // Reset category when type changes
   React.useEffect(() => {
     const newCats = type === "income" ? incomeCategories : expenseCategories;
@@ -39,8 +43,8 @@ export default function AddTransactionModal({
   const [date, setDate] = useState(() => {
     const now = new Date();
     const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   });
   const [justification, setJustification] = useState("");
@@ -63,6 +67,7 @@ export default function AddTransactionModal({
       category: category,
       note,
       date,
+      wallet, // Include wallet
       justification: isLocked && type === "expense" ? justification : undefined,
     });
     onClose();
@@ -90,7 +95,7 @@ export default function AddTransactionModal({
                 "flex-1 py-2 text-sm font-medium rounded-md transition-all",
                 type === "expense"
                   ? "bg-rose-500/20 text-rose-500 shadow-sm"
-                  : "text-zinc-500 hover:text-zinc-300"
+                  : "text-zinc-500 hover:text-zinc-300",
               )}
             >
               Expense
@@ -102,10 +107,38 @@ export default function AddTransactionModal({
                 "flex-1 py-2 text-sm font-medium rounded-md transition-all",
                 type === "income"
                   ? "bg-emerald-500/20 text-emerald-500 shadow-sm"
-                  : "text-zinc-500 hover:text-zinc-300"
+                  : "text-zinc-500 hover:text-zinc-300",
               )}
             >
               Income
+            </button>
+          </div>
+
+          {/* Wallet Toggle */}
+          <div className="flex bg-zinc-950 p-1 rounded-lg border border-zinc-800">
+            <button
+              type="button"
+              onClick={() => setWallet("cash")}
+              className={cn(
+                "flex-1 py-2 text-sm font-medium rounded-md transition-all",
+                wallet === "cash"
+                  ? "bg-zinc-800 text-white shadow-sm"
+                  : "text-zinc-500 hover:text-zinc-300",
+              )}
+            >
+              Cash Account
+            </button>
+            <button
+              type="button"
+              onClick={() => setWallet("bank")}
+              className={cn(
+                "flex-1 py-2 text-sm font-medium rounded-md transition-all",
+                wallet === "bank"
+                  ? "bg-zinc-800 text-white shadow-sm"
+                  : "text-zinc-500 hover:text-zinc-300",
+              )}
+            >
+              Bank Account
             </button>
           </div>
 

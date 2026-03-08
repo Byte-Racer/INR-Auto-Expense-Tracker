@@ -5,139 +5,233 @@ import SetupScreen from "./components/SetupScreen";
 import HomeView from "./components/HomeView";
 import ActivityView from "./components/ActivityView";
 import AlertsView from "./components/AlertsView";
+import WalletsView from "./components/WalletsView";
 import Navigation from "./components/Navigation";
 import AddTransactionModal from "./components/AddTransactionModal";
 import SettingsModal from "./components/SettingsModal";
 import { Plus, Settings } from "lucide-react";
 
 const DEFAULT_SETTINGS: AppSettings = {
-  initialBalance: 0,
+  initialCashBalance: 0,
+  initialBankBalance: 0,
   warningThresholdType: "percentage",
   warningThresholdValue: 20,
   lockThresholdValue: 500,
   isSetupComplete: false,
   username: "User",
   incomeCategories: ["Monthly", "Savings", "Repayments", "Other"],
-  expenseCategories: ["Food", "Transport", "Shopping", "Entertainment", "Bills", "Subscriptions", "Other"],
+  expenseCategories: [
+    "Food",
+    "Transport",
+    "Shopping",
+    "Entertainment",
+    "Bills",
+    "Subscriptions",
+    "Other",
+  ],
 };
 
-export type View = "home" | "activity" | "alerts";
+export type View = "home" | "activity" | "wallets" | "alerts";
 
 export default function App() {
   // Use 'any' temporarily to handle migration from old settings shape
   const [storedSettings, setSettings] = useLocalStorage<any>(
     "expense-tracker-settings",
-    DEFAULT_SETTINGS
+    DEFAULT_SETTINGS,
   );
   const [transactions, setTransactions] = useLocalStorage<Transaction[]>(
     "expense-tracker-transactions",
-    []
+    [],
   );
   const [currentView, setCurrentView] = useState<View>("home");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Merge with defaults to ensure new fields exist
-  const settings: AppSettings = useMemo(() => ({
-    ...DEFAULT_SETTINGS,
-    ...storedSettings,
-    // Ensure arrays are present if storedSettings has them (or if they are missing in stored, use default)
-    incomeCategories: storedSettings.incomeCategories || DEFAULT_SETTINGS.incomeCategories,
-    expenseCategories: storedSettings.expenseCategories || (storedSettings.categories ? storedSettings.categories : DEFAULT_SETTINGS.expenseCategories),
-  }), [storedSettings]);
+  const settings: AppSettings = useMemo(
+    () => ({
+      ...DEFAULT_SETTINGS,
+      ...storedSettings,
+      // Ensure arrays are present if storedSettings has them (or if they are missing in stored, use default)
+      incomeCategories:
+        storedSettings.incomeCategories || DEFAULT_SETTINGS.incomeCategories,
+      expenseCategories:
+        storedSettings.expenseCategories ||
+        (storedSettings.categories
+          ? storedSettings.categories
+          : DEFAULT_SETTINGS.expenseCategories),
+    }),
+    [storedSettings],
+  );
 
   // Migration: Remove old 'categories' key if present and ensure new keys are saved
   useEffect(() => {
+    let migrated = false;
+    const newSettings = { ...storedSettings };
+
     if (storedSettings.categories && !storedSettings.expenseCategories) {
-      const newSettings = {
-        ...storedSettings,
-        incomeCategories: DEFAULT_SETTINGS.incomeCategories,
-        expenseCategories: storedSettings.categories, // Map old categories to expense
-      };
+      newSettings.incomeCategories = DEFAULT_SETTINGS.incomeCategories;
+      newSettings.expenseCategories = storedSettings.categories; // Map old categories to expense
       delete newSettings.categories;
+      migrated = true;
+    }
+
+    if (storedSettings.initialBalance !== undefined) {
+      newSettings.initialBankBalance = storedSettings.initialBalance;
+      newSettings.initialCashBalance = 0;
+      delete newSettings.initialBalance;
+      migrated = true;
+    }
+
+    if (migrated) {
       setSettings(newSettings);
     }
   }, [storedSettings, setSettings]);
 
-  // Calculate current balance
-  const currentBalance = useMemo(() => {
-    const totalIncome = transactions
+  // Calculate current balances
+  const currentCashBalance = useMemo(() => {
+    const cashTransactions = transactions.filter((t) => t.wallet === "cash");
+    const totalIncome = cashTransactions
       .filter((t) => t.type === "income")
       .reduce((acc, curr) => acc + curr.amount, 0);
-    const totalExpense = transactions
+    const totalExpense = cashTransactions
       .filter((t) => t.type === "expense")
       .reduce((acc, curr) => acc + curr.amount, 0);
-    return settings.initialBalance + totalIncome - totalExpense;
-  }, [transactions, settings.initialBalance]);
+    return settings.initialCashBalance + totalIncome - totalExpense;
+  }, [transactions, settings.initialCashBalance]);
+
+  const currentBankBalance = useMemo(() => {
+    // Treat undefined wallet as bank for backward compatibility
+    const bankTransactions = transactions.filter(
+      (t) => t.wallet === "bank" || !t.wallet,
+    );
+    const totalIncome = bankTransactions
+      .filter((t) => t.type === "income")
+      .reduce((acc, curr) => acc + curr.amount, 0);
+    const totalExpense = bankTransactions
+      .filter((t) => t.type === "expense")
+      .reduce((acc, curr) => acc + curr.amount, 0);
+    return settings.initialBankBalance + totalIncome - totalExpense;
+  }, [transactions, settings.initialBankBalance]);
+
+  const currentBalance = currentCashBalance + currentBankBalance;
 
   const isLocked = currentBalance <= settings.lockThresholdValue;
 
   // Migration: Backfill isWarning/isLocked for existing transactions if missing
+  // Default wallet to bank if missing
   useEffect(() => {
-    const hasUnmigrated = transactions.some(t => t.type === 'expense' && (t.isWarning === undefined || t.isLocked === undefined));
-    
+    const hasUnmigrated =
+      transactions.some(
+        (t) =>
+          t.type === "expense" &&
+          (t.isWarning === undefined || t.isLocked === undefined),
+      ) || transactions.some((t) => !t.wallet);
+
     if (hasUnmigrated) {
-      let runningBalance = settings.initialBalance;
+      let runningCashBalance = settings.initialCashBalance || 0;
+      let runningBankBalance =
+        settings.initialBankBalance || (settings as any).initialBalance || 0;
+      let runningBalance = runningCashBalance + runningBankBalance;
       // Sort chronologically for replay
-      const sortedTxs = [...transactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      
-      const migratedTxs = sortedTxs.map(tx => {
-        if (tx.type === 'income') {
-          runningBalance += tx.amount;
-          return tx;
+      const sortedTxs = [...transactions].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+      );
+
+      const migratedTxs = sortedTxs.map((tx) => {
+        const wallet = tx.wallet || "bank"; // Default backward compatibility
+
+        if (tx.type === "income") {
+          if (wallet === "cash") runningCashBalance += tx.amount;
+          else runningBankBalance += tx.amount;
+
+          runningBalance = runningCashBalance + runningBankBalance;
+          return { ...tx, wallet };
         } else {
-          // Check thresholds BEFORE deduction (or after? Usually warnings trigger if balance IS low)
-          // Based on previous logic: "Check state BEFORE transaction"
-          const warningThreshold = settings.warningThresholdType === "percentage"
-            ? settings.initialBalance * (settings.warningThresholdValue / 100)
-            : settings.warningThresholdValue;
-            
+          // Check thresholds BEFORE deduction
+          const warningThreshold =
+            settings.warningThresholdType === "percentage"
+              ? (settings.initialCashBalance + settings.initialBankBalance) *
+                (settings.warningThresholdValue / 100)
+              : settings.warningThresholdValue;
+
           const isLockedState = runningBalance <= settings.lockThresholdValue;
           const isWarningState = runningBalance <= warningThreshold;
-          
-          runningBalance -= tx.amount;
+
+          if (wallet === "cash") runningCashBalance -= tx.amount;
+          else runningBankBalance -= tx.amount;
+
+          runningBalance = runningCashBalance + runningBankBalance;
 
           return {
             ...tx,
+            wallet,
             isLocked: tx.isLocked ?? isLockedState,
-            isWarning: tx.isWarning ?? (isWarningState && !isLockedState) // Warning only if not locked? Or both? Usually distinct.
-            // Previous logic: if locked count++, else if warning count++. So mutually exclusive in count, but state-wise...
-            // Let's keep them as flags.
+            isWarning: tx.isWarning ?? (isWarningState && !isLockedState),
           };
         }
       });
 
-      // Restore original order (newest first) if needed, but useLocalStorage usually just takes the array.
-      // My useLocalStorage might not handle re-sorting. The app usually expects newest first.
-      // Let's re-sort by date descending to be safe.
-      migratedTxs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      
+      migratedTxs.sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      );
+
       setTransactions(migratedTxs);
     }
-  }, []); // Run once on mount (or when transactions/settings change? No, only if unmigrated)
-
+  }, []); // Run once on mount
 
   const handleSetupComplete = (newSettings: AppSettings) => {
-    setSettings(newSettings); 
+    setSettings(newSettings);
   };
 
   const handleAddTransaction = (tx: Transaction) => {
     // Calculate flags for the new transaction
-    const warningThreshold = settings.warningThresholdType === "percentage"
-      ? settings.initialBalance * (settings.warningThresholdValue / 100)
-      : settings.warningThresholdValue;
+    const initialTotal =
+      settings.initialCashBalance + settings.initialBankBalance;
+    const warningThreshold =
+      settings.warningThresholdType === "percentage"
+        ? initialTotal * (settings.warningThresholdValue / 100)
+        : settings.warningThresholdValue;
 
     const isLockedState = currentBalance <= settings.lockThresholdValue;
     const isWarningState = currentBalance <= warningThreshold;
 
     const newTx = {
       ...tx,
-      isLocked: tx.type === 'expense' ? isLockedState : false,
-      isWarning: tx.type === 'expense' ? (isWarningState && !isLockedState) : false // Prioritize lock over warning
+      wallet: tx.wallet || "cash", // Default new additions to cash if not provided
+      isLocked: tx.type === "expense" ? isLockedState : false,
+      isWarning:
+        tx.type === "expense" ? isWarningState && !isLockedState : false,
     };
 
     setTransactions((prev) => [newTx, ...prev]);
   };
+
+  // Add native transaction listener
+  useEffect(() => {
+    (window as any).onNativeTransaction = (
+      type: string,
+      amount: string,
+      last4: string,
+    ) => {
+      console.log(`[App JS] Native Transaction: ${type}, ${amount}, ${last4}`);
+
+      const parsedAmount = parseFloat(amount.replace(/,/g, ""));
+      if (isNaN(parsedAmount)) return;
+
+      const tx: Transaction = {
+        id: crypto.randomUUID(),
+        type: type === "debit" ? "expense" : "income",
+        amount: parsedAmount,
+        category: "Other",
+        note: `Auto-detected ending in ${last4}`,
+        date: new Date().toISOString(),
+        wallet: "bank", // Always bank
+      };
+
+      handleAddTransaction(tx);
+    };
+  }, [handleAddTransaction]);
 
   const handleUpdateSettings = (newSettings: AppSettings) => {
     setSettings(newSettings);
@@ -149,11 +243,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-24 font-sans">
-       {/* Header */}
-       <header className="sticky top-0 z-20 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 px-6 py-4 flex justify-between items-center">
+      {/* Header */}
+      <header className="sticky top-0 z-20 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 px-6 py-4 flex justify-between items-center">
         <div>
           <h1 className="text-xl font-bold tracking-tight">Expense Tracker</h1>
-          <p className="text-xs text-zinc-400">Hello, {settings.username || "User"}</p>
+          <p className="text-xs text-zinc-400">
+            Hello, {settings.username || "User"}
+          </p>
         </div>
         <button
           onClick={() => setIsSettingsOpen(true)}
@@ -165,9 +261,9 @@ export default function App() {
 
       <main className="p-6 max-w-4xl mx-auto">
         {currentView === "home" && (
-          <HomeView 
-            settings={settings} 
-            transactions={transactions} 
+          <HomeView
+            settings={settings}
+            transactions={transactions}
             currentBalance={currentBalance}
             onNavigate={setCurrentView}
           />
@@ -177,6 +273,15 @@ export default function App() {
         )}
         {currentView === "alerts" && (
           <AlertsView transactions={transactions} settings={settings} />
+        )}
+        {currentView === "wallets" && (
+          <WalletsView
+            settings={settings}
+            transactions={transactions}
+            currentCashBalance={currentCashBalance}
+            currentBankBalance={currentBankBalance}
+            onUpdateSettings={handleUpdateSettings}
+          />
         )}
       </main>
 
