@@ -1,9 +1,9 @@
 {
   "name": "INR Expense Tracker",
   "short_name": "INR Expenses",
-  "start_url": "/INR-Auto-Expense-Tracker/",
-  "id": "/INR-Auto-Expense-Tracker/",
-  "scope": "/INR-Auto-Expense-Tracker/",
+  "start_url": "/",
+  "id": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "description": "A personal expense tracker with balance thresholds, spending alerts, and automatic transaction detection.",
