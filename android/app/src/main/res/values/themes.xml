@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.ExpenseTracker" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="colorPrimary">@color/emerald_500</item>
+        <item name="colorPrimaryVariant">@color/emerald_600</item>
+        <item name="colorSecondary">@color/blue_500</item>
+        <item name="colorSecondaryVariant">@color/blue_500</item>
+        <item name="android:colorBackground">@color/bg_primary</item>
+        <item name="colorError">@color/error</item>
+        <item name="android:windowBackground">@color/bg_primary</item>
+        <item name="android:statusBarColor">@color/bg_primary</item>
+        <item name="android:navigationBarColor">@color/bg_primary</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+</resources>

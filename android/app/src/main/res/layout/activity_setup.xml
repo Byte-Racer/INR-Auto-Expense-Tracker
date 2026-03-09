@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_primary">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/setup_screen_title"
+            android:textSize="28sp"
+            android:textColor="@color/text_primary"
+            android:textStyle="bold"
+            android:layout_marginBottom="32dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/username"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/username_input"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@color/bg_secondary"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_tertiary"
+            android:hint="Enter your name"
+            android:paddingHorizontal="16dp"
+            android:layout_marginBottom="24dp"
+            android:inputType="text" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Initial Cash Balance"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/cash_balance_input"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@color/bg_secondary"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_tertiary"
+            android:hint="₹0.00"
+            android:paddingHorizontal="16dp"
+            android:layout_marginBottom="24dp"
+            android:inputType="numberDecimal" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Initial Bank Balance"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/bank_balance_input"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@color/bg_secondary"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_tertiary"
+            android:hint="₹0.00"
+            android:paddingHorizontal="16dp"
+            android:layout_marginBottom="32dp"
+            android:inputType="numberDecimal" />
+
+        <Button
+            android:id="@+id/continue_button"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@color/emerald_500"
+            android:text="@string/save"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+
+    </LinearLayout>
+
+</ScrollView>

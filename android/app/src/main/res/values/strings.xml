@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Expense Tracker</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_activity">Activity</string>
+    <string name="nav_wallets">Wallets</string>
+    <string name="nav_alerts">Alerts</string>
+    <string name="current_balance">Current Balance</string>
+    <string name="alerts_warnings">Alerts &amp; Warnings</string>
+    <string name="daily_spending">Daily Spending</string>
+    <string name="spending_by_category">Spending by Category</string>
+    <string name="add_transaction">Add Transaction</string>
+    <string name="edit_transaction">Edit Transaction</string>
+    <string name="delete_transaction">Delete</string>
+    <string name="transaction_type">Transaction Type</string>
+    <string name="income">Income</string>
+    <string name="expense">Expense</string>
+    <string name="amount">Amount</string>
+    <string name="category">Category</string>
+    <string name="wallet">Wallet</string>
+    <string name="cash">Cash</string>
+    <string name="bank">Bank</string>
+    <string name="date">Date</string>
+    <string name="description">Description</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="settings">Settings</string>
+    <string name="username">Username</string>
+    <string name="initial_balance">Initial Balance</string>
+    <string name="warning_threshold">Warning Threshold</string>
+    <string name="lock_threshold">Lock Threshold</string>
+    <string name="categories">Categories</string>
+    <string name="auto_detect">Auto Detect Bank Transactions</string>
+    <string name="setup_screen_title">Setup Your Expense Tracker</string>
+    <string name="warning_low_balance">Warning: Balance is low!</string>
+    <string name="locked_spending_limit">Locked: Spending limit reached.</string>
+    <string name="no_transactions">No transactions yet</string>
+    <string name="no_expenses_period">No expenses for this period</string>
+</resources>

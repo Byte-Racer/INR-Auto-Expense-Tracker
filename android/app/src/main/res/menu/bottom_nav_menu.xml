@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/homeFragment"
+        android:icon="@drawable/ic_home"
+        android:title="@string/nav_home" />
+    <item
+        android:id="@+id/activityFragment"
+        android:icon="@drawable/ic_activity"
+        android:title="@string/nav_activity" />
+    <item
+        android:id="@+id/walletsFragment"
+        android:icon="@drawable/ic_wallet"
+        android:title="@string/nav_wallets" />
+    <item
+        android:id="@+id/alertsFragment"
+        android:icon="@drawable/ic_alert"
+        android:title="@string/nav_alerts" />
+</menu>

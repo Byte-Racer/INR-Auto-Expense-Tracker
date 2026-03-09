@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.expensetracker.ui.fragments.HomeFragment"
+        android:label="Home" />
+
+    <fragment
+        android:id="@+id/activityFragment"
+        android:name="com.expensetracker.ui.fragments.ActivityFragment"
+        android:label="Activity" />
+
+    <fragment
+        android:id="@+id/walletsFragment"
+        android:name="com.expensetracker.ui.fragments.WalletsFragment"
+        android:label="Wallets" />
+
+    <fragment
+        android:id="@+id/alertsFragment"
+        android:name="com.expensetracker.ui.fragments.AlertsFragment"
+        android:label="Alerts" />
+
+</navigation>

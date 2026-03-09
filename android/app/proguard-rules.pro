@@ -1,0 +1,8 @@
+-keep class androidx.** { *; }
+-keep class com.google.android.material.** { *; }
+-keep class com.github.mikephil.charting.** { *; }
+-keep class com.expensetracker.** { *; }
+-keepclassmembers class com.expensetracker.data.** { *; }
+-keepclassmembers class com.expensetracker.** { *; }
+-keep class * extends androidx.room.RoomDatabase { *; }
+-keepclassmembers class * extends androidx.room.RoomDatabase { *; }
