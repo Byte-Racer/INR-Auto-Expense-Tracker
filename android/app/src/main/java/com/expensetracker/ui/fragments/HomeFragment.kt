@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.Observer
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.XAxis
@@ -153,15 +154,15 @@ class HomeFragment : Fragment() {
             val cal = Calendar.getInstance()
             cal.add(Calendar.DAY_OF_YEAR, -i)
             Pair(SimpleDateFormat("MMM dd", Locale.getDefault()).format(cal.time), 0.0)
-        }.reversed().toMutableMap()
+        }.reversed().associate { it.first to it.second }.toMutableMap()
 
         transactions.filter { it.type == "expense" }.forEach { tx ->
             val date = SimpleDateFormat("MMM dd", Locale.getDefault()).format(Date(tx.timestamp))
             last30Days[date] = (last30Days[date] ?: 0.0) + tx.amount
         }
 
-        val entries = last30Days.entries.mapIndexed { index, (_, amount) ->
-            BarEntry(index.toFloat(), amount.toFloat())
+        val entries = last30Days.entries.mapIndexed { index, entry ->
+            BarEntry(index.toFloat(), entry.value.toFloat())
         }
 
         val dataSet = BarDataSet(entries, "Daily Spending").apply {

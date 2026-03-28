@@ -22,7 +22,7 @@ class MainViewModel(
     val settings = settingsRepository.getSettings().asLiveData()
 
     private val _currentBalance = MutableStateFlow(0.0)
-    val currentBalance: StateFlow<Double> = _currentBalance
+    val currentBalance = _currentBalance.asLiveData()
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading

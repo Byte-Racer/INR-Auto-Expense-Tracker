@@ -46,11 +46,13 @@ class MainActivity : AppCompatActivity() {
         checkSetupCompletion()
     }
 
+
     private fun checkSetupCompletion() {
-        val settings = viewModel.settings.value
-        if (settings == null || settings.username.isEmpty()) {
-            startActivity(Intent(this, SetupActivity::class.java))
-            finish()
+        viewModel.settings.observe(this) { settings ->
+            if (settings == null || settings.username.isEmpty()) {
+                startActivity(Intent(this, SetupActivity::class.java))
+                finish()
+            }
         }
     }
-}
+    }
